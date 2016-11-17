@@ -1,0 +1,57 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<lc:LibraryCompiler xmlns:lc="urn:abb-robotics-robotstudio-librarycompiler"
+										xmlns="urn:abb-robotics-robotstudio-graphiccomponent"
+                    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                    xsi:schemaLocation="urn:abb-robotics-robotstudio-librarycompiler file:///C:\Program%20Files%20(x86)\ABB%20Industrial%20IT\Robotics%20IT\SDK\RobotStudio%20SDK%206.04\LibraryCompilerSchema.xsd
+                                        urn:abb-robotics-robotstudio-graphiccomponent file:///C:\Program%20Files%20(x86)\ABB%20Industrial%20IT\Robotics%20IT\SDK\RobotStudio%20SDK%206.04\GraphicComponentSchema.xsd">
+	<lc:Library fileName="RSConnectDIOToSnap7.rslib">
+		<lc:DocumentProperties>
+			<lc:Author>FRAIPONT_Denis</lc:Author>
+			<lc:Image source="RSConnectDIOToSnap7.png"/>
+		</lc:DocumentProperties>
+		<SmartComponent name="RSConnectDIOToSnap7" icon="RSConnectDIOToSnap7.png"
+										codeBehind="RSConnectDIOToSnap7.CodeBehind,RSConnectDIOToSnap7.dll"
+										canBeSimulated="true">
+			<Properties>
+				<DynamicProperty name="Status" valueType="System.String" value="Stopped" readOnly="true" uiVisible="false">
+					<Attribute key="AddToDisplayName" value="true"/>
+				</DynamicProperty>
+				<DynamicProperty name="PLC_Addr" valueType="System.String" value="0.0.0.0">
+          <Attribute key="AutoApply" value="true"/>
+          <Attribute key="CustomValidation" value="true"/>
+        </DynamicProperty>
+				<DynamicProperty name="PLC_Rack" valueType="System.Int32" value="0">
+          <Attribute key="MinValue" value="0"/>
+          <Attribute key="AutoApply" value="true"/>
+          <Attribute key="CustomValidation" value="true"/>
+        </DynamicProperty>
+				<DynamicProperty name="PLC_Slot" valueType="System.Int32" value="2">
+          <Attribute key="MinValue" value="0"/>
+          <Attribute key="AutoApply" value="true"/>
+          <Attribute key="CustomValidation" value="true"/>
+        </DynamicProperty>
+        <DynamicProperty name="DI_Number" valueType="System.Int32" value="0">
+          <Attribute key="MinValue" value="0"/>
+          <Attribute key="AutoApply" value="true"/>
+          <Attribute key="CustomValidation" value="true"/>
+        </DynamicProperty>
+        <DynamicProperty name="DO_Number" valueType="System.Int32" value="0">
+          <Attribute key="MinValue" value="0"/>
+          <Attribute key="AutoApply" value="true"/>
+          <Attribute key="CustomValidation" value="true"/>
+        </DynamicProperty>
+      </Properties>
+			<Bindings>
+			</Bindings>
+			<Signals>
+				<IOSignal name="Connect" signalType="DigitalInput" value="0"/>
+        <IOSignal name="Read" signalType="DigitalInput" autoReset="true" uiVisible="false"/>
+			</Signals>
+			<GraphicComponents>
+			</GraphicComponents>
+			<Assets>
+				<Asset source="RSConnectDIOToSnap7.dll"/>
+			</Assets>
+		</SmartComponent>
+	</lc:Library>
+</lc:LibraryCompiler>
