@@ -26,23 +26,6 @@
 |  This project uses Sharp7 from Snap7 project: http://snap7.sourceforge.net/  |
 |=============================================================================*/
 
-//------ What you have to do before compiling: --------------------------------//
-//Update ABB.Robotics.* References to Good RobotStudio SDK Version path by adding Reference - Browse.
-//On Project Properties:
-//  Application: Choose good .NET Framework version.
-//  Build Events: Post Build Events: Replace with the good LibraryCompiler.exe Path.
-//  Debug: Start External Program: Replace with the good RobotStudio.exe Path //This not work if project on network drive, let it clear.
-//In \RSConnectDIOToSnap7\RSConnectDIOToSnap7.en.xml: Replace xsi:schemaLocation value with good one.
-//Same for \RSConnectDIOToSnap7\RSConnectDIOToSnap7.xml.
-//
-//In $(RobotStudioPath)\Bin\RobotStudio.exe.config file
-//  Add in section <configuration><runtime>
-//          <loadFromRemoteSources enable="true"/>
-//
-//To Debug if project on network drive:
-//  Start first RobotStudio to get RobotStudio.exe.config loaded.
-//  Then attach its process in VS Debug menu.
-
 using System;
 using System.Collections.Generic;
 using System.Text;
