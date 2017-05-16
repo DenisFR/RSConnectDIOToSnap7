@@ -23,7 +23,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <StartAction>Program</StartAction>
-    <StartProgram>$(ProgramFiles)\ABB Industrial IT\Robotics IT\RobotStudio 6.02\Bin\RobotStudio.exe</StartProgram>
+    <StartProgram>$(ProgramFiles)\ABB Industrial IT\Robotics IT\RobotStudio 6.05\Bin\RobotStudio.exe</StartProgram>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -33,7 +33,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <StartAction>Program</StartAction>
-    <StartProgram>$(ProgramFiles)\ABB Industrial IT\Robotics IT\RobotStudio 6.02\Bin\RobotStudio.exe</StartProgram>
+    <StartProgram>$(ProgramFiles)\ABB Industrial IT\Robotics IT\RobotStudio 6.05\Bin\RobotStudio.exe</StartProgram>
   </PropertyGroup>
   <PropertyGroup>
     <RunPostBuildEvent>Always</RunPostBuildEvent>
@@ -41,17 +41,17 @@
   <ItemGroup>
     <Reference Include="ABB.Robotics.Math">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>C:\Program Files (x86)\ABB Industrial IT\Robotics IT\SDK\RobotStudio SDK 6.04\ABB.Robotics.Math.dll</HintPath>
+      <HintPath>C:\Program Files (x86)\ABB Industrial IT\Robotics IT\SDK\RobotStudio SDK 6.05\ABB.Robotics.Math.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="ABB.Robotics.RobotStudio">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>C:\Program Files (x86)\ABB Industrial IT\Robotics IT\SDK\RobotStudio SDK 6.04\ABB.Robotics.RobotStudio.dll</HintPath>
+      <HintPath>C:\Program Files (x86)\ABB Industrial IT\Robotics IT\SDK\RobotStudio SDK 6.05\ABB.Robotics.RobotStudio.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="ABB.Robotics.RobotStudio.Stations">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>C:\Program Files (x86)\ABB Industrial IT\Robotics IT\SDK\RobotStudio SDK 6.04\ABB.Robotics.RobotStudio.Stations.dll</HintPath>
+      <HintPath>C:\Program Files (x86)\ABB Industrial IT\Robotics IT\SDK\RobotStudio SDK 6.05\ABB.Robotics.RobotStudio.Stations.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="System" />
@@ -82,6 +82,6 @@
   -->
   <PropertyGroup>
     <PostBuildEvent>copy /y "$(TargetPath)" "$(ProjectDir)"
-"C:\Program Files (x86)\ABB Industrial IT\Robotics IT\RobotStudio 6.04\bin\LibraryCompiler.exe" "$(ProjectDir)\RSConnectDIOToSnap7.xml"</PostBuildEvent>
+"C:\Program Files (x86)\ABB Industrial IT\Robotics IT\RobotStudio 6.05\bin\LibraryCompiler.exe" "$(ProjectDir)\RSConnectDIOToSnap7.xml"</PostBuildEvent>
   </PropertyGroup>
 </Project>
