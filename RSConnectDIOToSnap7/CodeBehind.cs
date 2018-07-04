@@ -1,7 +1,7 @@
 ﻿/*=============================================================================|
-|  PROJECT RSConnectDIOToSnap7                                           1.0.0 |
+|  PROJECT RSConnectDIOToSnap7                                           1.0.1 |
 |==============================================================================|
-|  Copyright (C) 2016 Denis FRAIPONT                                           |
+|  Copyright (C) 2018 Denis FRAIPONT                                           |
 |  All rights reserved.                                                        |
 |==============================================================================|
 |  RSConnectDIOToSnap7 is free software: you can redistribute it and/or modify |
@@ -28,9 +28,7 @@
 
 using System;
 using System.Collections.Generic;
-using System.Text;
 
-using ABB.Robotics.Math;
 using ABB.Robotics.RobotStudio;
 using ABB.Robotics.RobotStudio.Stations;
 
@@ -389,7 +387,7 @@ namespace RSConnectDIOToSnap7
 					if (!component.Properties.Contains(diAddress))
 					{
 						DynamicProperty idp = new DynamicProperty(diAddress, "System.String");
-						idp.Value = "A0.0";
+						idp.Value = "M0.0";
 						idp.ReadOnly = false;
 						idp.UIVisible = true;
 						idp.Attributes["AutoApply"] = "true";
@@ -439,7 +437,7 @@ namespace RSConnectDIOToSnap7
 					if (!component.Properties.Contains(doAddress))
 					{
 						DynamicProperty idp = new DynamicProperty(doAddress, "System.String");
-						idp.Value = "E0.0";
+						idp.Value = "M0.0";
 						idp.ReadOnly = false;
 						idp.UIVisible = true;
 						idp.Attributes["AutoApply"] = "true";
@@ -541,7 +539,7 @@ namespace RSConnectDIOToSnap7
 				item.Start = offset;
 				item.Amount = 1;
 			}
-			else if (strName.Substring(0, 1) == "A")
+			else if ((strName.Substring(0, 1) == "A") || (strName.Substring(0, 1) == "Q"))
 			{
 				item.Area = S7Consts.S7AreaPA;
 				if (strName.Length < 2) //Ax0 || A0.
@@ -554,7 +552,7 @@ namespace RSConnectDIOToSnap7
 				item.Start = offset;
 				item.Amount = 1;
 			}
-			else if (strName.Substring(0, 1) == "E")
+			else if ((strName.Substring(0, 1) == "E") || (strName.Substring(0, 1) == "I"))
 			{
 				item.Area = S7Consts.S7AreaPE;
 				if (strName.Length < 2) //Ex0 || E0.

@@ -2,8 +2,8 @@
 <lc:LibraryCompiler xmlns:lc="urn:abb-robotics-robotstudio-librarycompiler"
 										xmlns="urn:abb-robotics-robotstudio-graphiccomponent"
                     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-                    xsi:schemaLocation="urn:abb-robotics-robotstudio-librarycompiler file:///C:\Program%20Files%20(x86)\ABB%20Industrial%20IT\Robotics%20IT\SDK\RobotStudio%20SDK%206.05\LibraryCompilerSchema.xsd
-                                        urn:abb-robotics-robotstudio-graphiccomponent file:///C:\Program%20Files%20(x86)\ABB%20Industrial%20IT\Robotics%20IT\SDK\RobotStudio%20SDK%206.05\GraphicComponentSchema.xsd">
+                    xsi:schemaLocation="urn:abb-robotics-robotstudio-librarycompiler file:///C:\Program%20Files%20(x86)\ABB%20Industrial%20IT\Robotics%20IT\SDK\RobotStudio%20SDK%206.07\LibraryCompilerSchema.xsd
+                                        urn:abb-robotics-robotstudio-graphiccomponent file:///C:\Program%20Files%20(x86)\ABB%20Industrial%20IT\Robotics%20IT\SDK\RobotStudio%20SDK%206.07\GraphicComponentSchema.xsd">
 	<lc:Library fileName="RSConnectDIOToSnap7.rslib">
 		<lc:DocumentProperties>
 			<lc:Author>FRAIPONT_Denis</lc:Author>

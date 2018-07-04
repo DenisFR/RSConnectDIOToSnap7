@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LibraryResource xmlns="urn:abb-robotics-robotstudio-libraryresource"
                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-                 xsi:schemaLocation="urn:abb-robotics-robotstudio-libraryresource file:///C:\Program%20Files%20(x86)\ABB%20Industrial%20IT\Robotics%20IT\SDK\RobotStudio%20SDK%206.05\LibraryResourceSchema.xsd">
+                 xsi:schemaLocation="urn:abb-robotics-robotstudio-libraryresource file:///C:\Program%20Files%20(x86)\ABB%20Industrial%20IT\Robotics%20IT\SDK\RobotStudio%20SDK%206.07\LibraryResourceSchema.xsd">
 	<SmartComponent name="RSConnectDIOToSnap7" description="Allow to connect Robot with real or simulated S7 PLC using Sharp7(Snap7).">
 		<DynamicProperty name="Status" description="The status of this component."/>
 		<DynamicProperty name="PLC_Addr" description="IP Address of PLC IPV4.
@@ -12,11 +12,11 @@ S7_12xx/15xx Rack=0"/>
     <DynamicProperty name="PLC_Slot" description="S7_300 Slot=2
 S7_400 See HW Config
 S7_12xx/15xx Slot=1"/>
-    <DynamicProperty name="DI_Number" description="Number of DI."/>
-    <DynamicProperty name="DO_Number" description="Number of DO."/>
-    <DynamicProperty name="DI_Address_0" description="You can use:&#13;&#10;Ax.y&#13;&#10;Mx.y&#13;&#10;DBx.DBXy.z"/>
-    <DynamicProperty name="DO_Address_0" description="You can use:&#13;&#10;Ex.y&#13;&#10;Mx.y&#13;&#10;DBx.DBXy.z"/>
+    <DynamicProperty name="DI_Number" description="Number of DI to connect to in Station Logic. Change it to get DI appearing."/>
+    <DynamicProperty name="DO_Number" description="Number of DO to connect to in Station Logic. Change it to get DO appearing."/>
+    <DynamicProperty name="DI_Address_0" description="You can use:&#13;&#10;Ax.y&#13;&#10;Qx.y&#13;&#10;Mx.y&#13;&#10;DBx.DBXy.z"/>
+    <DynamicProperty name="DO_Address_0" description="You can use:&#13;&#10;Ex.y&#13;&#10;Ix.y&#13;&#10;Mx.y&#13;&#10;DBx.DBXy.z"/>
 		<IOSignal name="Connect" description="Start to connect to PLC."/>
-		<IOSignal name="Read" description="Read GI on PLC one time."/>
+		<IOSignal name="Read" description="Read DI on PLC one time. In simulation running, they are read continuously."/>
 	</SmartComponent>
 </LibraryResource>
