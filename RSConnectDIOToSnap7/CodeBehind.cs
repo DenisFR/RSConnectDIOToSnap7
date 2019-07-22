@@ -52,8 +52,9 @@ namespace RSConnectDIOToSnap7
 		private S7Client client;
 		private bool bCanConnect = false;
 		private bool bPLC_AddrIsValid = false;
-		private bool[] bDI_AddressIsValid = { };
-		private bool[] bDO_AddressIsValid = { };
+        private bool[][] bDIO_AddressIsValid = new bool[2][];
+        public enum IO { Input,Output };
+        private double timePassed = 0;
 
 		/// <summary>
 		/// Called from [!:SmartComponent.InitializeCodeBehind]. 
@@ -61,12 +62,11 @@ namespace RSConnectDIOToSnap7
 		/// <param name="component">Smart Component</param>
 		public override void OnInitialize(SmartComponent component)
 		{
-			///Never Called???
 			base.OnInitialize(component);
 			CheckClientAndValues(component);
 
-			UpdateDICount(component, 0);
-			UpdateDOCount(component, 0);
+			UpdateIOCount(component, 0,IO.Input);
+            UpdateIOCount(component, 0, IO.Output);
 		}
 
 		/// <summary>
@@ -76,13 +76,17 @@ namespace RSConnectDIOToSnap7
 		public override void OnLoad(SmartComponent component)
 		{
 			base.OnLoad(component);
-			CheckClientAndValues(component);
+
+            bDIO_AddressIsValid[0] = new bool[0];
+            bDIO_AddressIsValid[1] = new bool[0];
+
+            CheckClientAndValues(component);
 			Disconnect(component);
 
-			//component.Properties not initialized yet;
-			UpdateDICount(component, 0);
-			UpdateDOCount(component, 0);
-		}
+            //component.Properties not initialized yet;
+            UpdateIOCount(component, 0, IO.Input);
+            UpdateIOCount(component, 0, IO.Output);
+        }
 
 		/// <summary>
 		/// Called when the value of a dynamic property value has changed.
@@ -96,11 +100,11 @@ namespace RSConnectDIOToSnap7
 
 			if (changedProperty.Name == "DI_Number")
 			{
-				UpdateDICount(component, (int)oldValue);
+				UpdateIOCount(component, (int)oldValue,IO.Input);
 			}
 			if (changedProperty.Name == "DO_Number")
 			{
-				UpdateDOCount(component, (int)oldValue);
+                UpdateIOCount(component, (int)oldValue,IO.Output);
 			}
 
 			//Make sure client is initialized before connect.
@@ -128,22 +132,22 @@ namespace RSConnectDIOToSnap7
 			{
 				Read(component);
 			}
-			if (changedSignal.Name.Contains("DO_"))
+			if (changedSignal.Name.Contains("DI_"))
 			{
 				if (client.Connected)
 				{
-					int doNumber = -1;
-					int.TryParse(Right(changedSignal.Name, changedSignal.Name.Length - 3), out doNumber);
-					if (doNumber >= 0)
+					int diNumber = -1;
+					int.TryParse(Right(changedSignal.Name, changedSignal.Name.Length - 3), out diNumber);
+					if (diNumber >= 0)
 					{
 						S7Client.S7DataItem item = new S7Client.S7DataItem();
-						if (GetS7DataItem((string)component.Properties["DO_Address_" + doNumber.ToString()].Value, ref item))
+						if (GetS7DataItem((string)component.Properties["DI_Address_" + diNumber.ToString()].Value, ref item))
 						{
 							byte[] b = new byte[1];
 							byte.TryParse(changedSignal.Value.ToString(), out b[0]);
-							int result = 0x01700000;// S7Consts.errCliInvalidBlockType
-							result = client.WriteArea(item.Area, item.DBNumber, item.Start, item.Amount, item.WordLen, b);
-							ShowResult(component, result);
+                            int err = S7Consts.errCliInvalidBlockType;
+							err = client.WriteArea(item.Area, item.DBNumber, item.Start, item.Amount, item.WordLen, b);
+							LogError(component, err);
 						}
 					}
 				}
@@ -162,17 +166,22 @@ namespace RSConnectDIOToSnap7
 		/// </remarks>
 		public override void OnSimulationStep(SmartComponent component, double simulationTime, double previousTime)
 		{
-			Read(component);
+            timePassed += simulationTime - previousTime;
+            if(timePassed >10)
+            {
+                timePassed = 0;
+                Read(component);
+            }       
 		}
 
 		/// <summary>
 		/// Called to validate the value of a dynamic property with the CustomValidation attribute.
 		/// </summary>
-		/// <param name="component">Component that owns the changed property.</param>
+		/// <param name="smartComponent">Component that owns the changed property.</param>
 		/// <param name="property">Property that owns the value to be validated.</param>
 		/// <param name="newValue">Value to validate.</param>
 		/// <returns>Result of the validation. </returns>
-		public override ValueValidationInfo QueryPropertyValueValid(SmartComponent component, DynamicProperty property, object newValue)
+		public override ValueValidationInfo QueryPropertyValueValid(SmartComponent smartComponent, DynamicProperty property, object newValue)
 		{
 			bCanConnect = false;
 			if (property.Name == "PLC_Addr")
@@ -183,36 +192,20 @@ namespace RSConnectDIOToSnap7
 					return new ValueValidationInfo(ValueValidationResult.InvalidSyntax);
 				bPLC_AddrIsValid = true;
 			}
-			if (property.Name.StartsWith("DI_Address_"))
-			{
-				int diNumber = -1;
-				int.TryParse(Right(property.Name, property.Name.Length - 11), out diNumber);
-				if ((diNumber >= 0) && (diNumber < bDI_AddressIsValid.Length))
-				{
-					bDI_AddressIsValid[diNumber] = false;
-					S7Client.S7DataItem item = new S7Client.S7DataItem();
-					if (!GetS7DataItem((string)newValue, ref item))
-						return new ValueValidationInfo(ValueValidationResult.InvalidSyntax);
-					if (item.WordLen != S7Consts.S7WLBit)
-						return new ValueValidationInfo(ValueValidationResult.InvalidSyntax);
-					if ((item.Area != S7Consts.S7AreaPA)
-							&& (item.Area != S7Consts.S7AreaMK)
-							&& (item.Area != S7Consts.S7AreaDB)
-							)
-						return new ValueValidationInfo(ValueValidationResult.InvalidSyntax);
-
-					bDI_AddressIsValid[diNumber] = true;
-				}
-				else
-					return new ValueValidationInfo(ValueValidationResult.InvalidProject);
-			}
-			if (property.Name.StartsWith("DO_Address_"))
+            if (property.Name.StartsWith("DI_Address_"))
+            {
+                ValueValidationInfo vvi = DIValidationInfo(smartComponent, property, newValue);
+                if (!vvi.Equals(ValueValidationInfo.Valid)){
+                    return vvi;
+                }
+            }
+            if (property.Name.StartsWith("DO_Address_"))
 			{
 				int doNumber = -1;
 				int.TryParse(Right(property.Name, property.Name.Length - 11), out doNumber);
-				if ((doNumber >= 0) && (doNumber < bDO_AddressIsValid.Length))
+				if ((doNumber >= 0) && (doNumber < bDIO_AddressIsValid[(int)IO.Output].Length))
 				{
-					bDO_AddressIsValid[doNumber] = false;
+                    bDIO_AddressIsValid[(int)IO.Output][doNumber] = false;
 					S7Client.S7DataItem item = new S7Client.S7DataItem();
 					if (!GetS7DataItem((string)newValue, ref item))
 						return new ValueValidationInfo(ValueValidationResult.InvalidSyntax);
@@ -224,78 +217,102 @@ namespace RSConnectDIOToSnap7
 							)
 						return new ValueValidationInfo(ValueValidationResult.InvalidSyntax);
 
-					bDO_AddressIsValid[doNumber] = true;
+                    bDIO_AddressIsValid[(int)IO.Output][doNumber] = true;
 				}
 				else
 					return new ValueValidationInfo(ValueValidationResult.InvalidProject);
 			}
 
 			bCanConnect = bPLC_AddrIsValid;
-			for (int i = 0; i < bDI_AddressIsValid.Length; ++i)
-				bCanConnect &= bDI_AddressIsValid[i] || ((int)component.Properties["DI_Number"].Value == 0);
-			for (int i = 0; i < bDO_AddressIsValid.Length; ++i)
-				bCanConnect &= bDO_AddressIsValid[i] || ((int)component.Properties["DO_Number"].Value == 0);
-			component.IOSignals["Connect"].UIVisible = bCanConnect;
+			for (int i = 0; i < bDIO_AddressIsValid[(int)IO.Input].Length; ++i)
+				bCanConnect &= bDIO_AddressIsValid[(int)IO.Input][i] || ((int)smartComponent.Properties["DI_Number"].Value == 0);
+			for (int i = 0; i < bDIO_AddressIsValid[(int)IO.Output].Length; ++i)
+				bCanConnect &= bDIO_AddressIsValid[(int)IO.Output][i] || ((int)smartComponent.Properties["DO_Number"].Value == 0);
+			smartComponent.IOSignals["Connect"].UIVisible = bCanConnect;
 			return ValueValidationInfo.Valid;
 		}
+        private ValueValidationInfo DIValidationInfo(SmartComponent smartComponent, DynamicProperty property, object newValue)
+        {   
+            int diNumber = -1;
+            int.TryParse(Right(property.Name, property.Name.Length - 11), out diNumber);
+            if ((diNumber >= 0) && (diNumber < bDIO_AddressIsValid[(int)IO.Input].Length))
+            {
+                bDIO_AddressIsValid[(int)IO.Input][diNumber] = false;
+                S7Client.S7DataItem item = new S7Client.S7DataItem();
+                if (!GetS7DataItem((string)newValue, ref item))
+                    return new ValueValidationInfo(ValueValidationResult.InvalidSyntax);
+                if (item.WordLen != S7Consts.S7WLBit)
+                    return new ValueValidationInfo(ValueValidationResult.InvalidSyntax);
+                if ((item.Area != S7Consts.S7AreaPA)
+                        && (item.Area != S7Consts.S7AreaMK)
+                        && (item.Area != S7Consts.S7AreaDB)
+                        )
+                    return new ValueValidationInfo(ValueValidationResult.InvalidSyntax);
+
+                bDIO_AddressIsValid[(int)IO.Input][diNumber] = true;
+                return ValueValidationInfo.Valid;
+            }
+            else
+                return new ValueValidationInfo(ValueValidationResult.InvalidProject);     
+        }
 
 		/// <summary>
 		/// Mark sure client is initialized.
 		/// </summary>
-		/// <param name="component"></param>
-		private void CheckClientAndValues(SmartComponent component)
+		/// <param name="smartComponent"></param>
+		private void CheckClientAndValues(SmartComponent smartComponent)
 		{
 			if (client == null)
 			{
 				client = new S7Client();
-				Disconnect(component);
+				Disconnect(smartComponent);
 			}
 
-			int diCount = (int)component.Properties["DI_Number"].Value;
-			if (diCount != bDI_AddressIsValid.Length)// When just loaded array is not initialized
-				UpdateDICount(component, diCount);
-			int doCount = (int)component.Properties["DO_Number"].Value;
-			if (doCount != bDO_AddressIsValid.Length)// When just loaded array is not initialized
-				UpdateDOCount(component, doCount);
+			int diCount = (int)smartComponent.Properties["DI_Number"].Value;
+			if (diCount != bDIO_AddressIsValid[(int)IO.Input].Length)// When just loaded array is not initialized
+				UpdateIOCount(smartComponent, diCount,IO.Input);
+			int doCount = (int)smartComponent.Properties["DO_Number"].Value;
+			if (doCount != bDIO_AddressIsValid[(int)IO.Output].Length)// When just loaded array is not initialized
+                UpdateIOCount(smartComponent, diCount, IO.Output);
 
-			for (int i = 0; i < component.Properties.Count; ++i)
+            for (int i = 0; i < smartComponent.Properties.Count; ++i)
 			{
-				component.Properties[i].ValidateValue(component.Properties[i].Value);
+				smartComponent.Properties[i].ValidateValue(smartComponent.Properties[i].Value);
 			}
 		}
 
 		/// <summary>
 		/// Connect component to PLC
 		/// </summary>
-		/// <param name="component"></param>
-		private void Connect(SmartComponent component)
+		/// <param name="smartComponent"></param>
+		private void Connect(SmartComponent smartComponent)
 		{
 			int result;
-			string ip = (string)component.Properties["PLC_Addr"].Value;
-			int rack = (int)component.Properties["PLC_Rack"].Value;
-			int slot = (int)component.Properties["PLC_Slot"].Value;
+			string ip = (string)smartComponent.Properties["PLC_Addr"].Value;
+			int rack = (int)smartComponent.Properties["PLC_Rack"].Value;
+			int slot = (int)smartComponent.Properties["PLC_Slot"].Value;
 			result = client.ConnectTo(ip, rack, slot);
-			ShowResult(component, result);
-			UpdateConnected(component, result == 0);
+			LogError(smartComponent, result);
+			LockUi(smartComponent, result == 0);
 		}
 
 		/// <summary>
-		/// Disconnect component to PLC
+		/// Disconnect component from PLC
 		/// </summary>
 		/// <param name="component"></param>
 		private void Disconnect(SmartComponent component)
 		{
 			client.Disconnect();
 			component.IOSignals["Connect"].Value = 0;
-			UpdateConnected(component, false);
+			LockUi(component, false);
 		}
 
 		/// <summary>
-		/// Update each property depends connection status
+		/// Lock UI-Elements depending on connection status
 		/// </summary>
 		/// <param name="component"></param>
 		/// <param name="bConnected"></param>
-		private void UpdateConnected(SmartComponent component, Boolean bConnected)
+		private void LockUi(SmartComponent component, Boolean bConnected)
 		{
 			component.Properties["Status"].Value = bConnected ? "Connected" : "Disconnected";
 
@@ -304,57 +321,57 @@ namespace RSConnectDIOToSnap7
 			component.Properties["PLC_Slot"].ReadOnly = bConnected;
 
 			component.Properties["DI_Number"].ReadOnly = bConnected;
-			for (int i = 0; i < bDI_AddressIsValid.Length; ++i)
+			for (int i = 0; i < bDIO_AddressIsValid[(int)IO.Input].Length; ++i)
 				component.Properties["DI_Address_" + i.ToString()].ReadOnly = bConnected;
 
 			component.Properties["DO_Number"].ReadOnly = bConnected;
-			for (int i = 0; i < bDO_AddressIsValid.Length; ++i)
+			for (int i = 0; i < bDIO_AddressIsValid[(int)IO.Output].Length; ++i)
 				component.Properties["DO_Address_" + i.ToString()].ReadOnly = bConnected;
 
-			component.IOSignals["Read"].UIVisible = (bDI_AddressIsValid.Length > 0) && bConnected;
+			component.IOSignals["Read"].UIVisible = (bDIO_AddressIsValid[(int)IO.Input].Length > 0) && bConnected;
 		}
 
 		/// <summary>
-		/// Read all GI from PLC.
+		/// Read all DI from PLC.
 		/// </summary>
-		/// <param name="component"></param>
-		private void Read(SmartComponent component)
+		/// <param name="smartComponent"></param>
+		private void Read(SmartComponent smartComponent)
 		{
 			if (client.Connected)
 			{
 				S7MultiVar reader = new S7MultiVar(client);
 
-				bool allDI_OK = true;
-				int diCount = (int)component.Properties["DI_Number"].Value;
-				List<byte[]> list = new List<byte[]>();
-				for (int i = 0; i < diCount; ++i)
+				bool allDO_OK = true;
+				int doCount = (int)smartComponent.Properties["DO_Number"].Value;
+				List<byte[]> listBuffers = new List<byte[]>();
+				for (int i = 0; i < doCount; ++i)
 				{
 					S7Client.S7DataItem item = new S7Client.S7DataItem();
-					allDI_OK &= GetS7DataItem((string)component.Properties["DI_Address_" + i.ToString()].Value, ref item);
-					if (allDI_OK)
+					allDO_OK &= GetS7DataItem((string)smartComponent.Properties["DO_Address_" + i.ToString()].Value, ref item);
+					if (allDO_OK)
 					{
-						byte[] b = new byte[1];
-						list.Add(b);
-						if (!reader.Add(item.Area, item.WordLen, item.DBNumber, item.Start, item.Amount, ref b))
-							ShowResult(component, 0x00200000);// S7Consts.errCliInvalidParams
+						byte[] buffer = new byte[1];
+						listBuffers.Add(buffer);
+						if (!reader.Add(item.Area, item.WordLen, item.DBNumber, item.Start, item.Amount, ref buffer))
+							LogError(smartComponent, S7Consts.errCliInvalidParams);
 					}
 				}
 
-				if (allDI_OK && (diCount > 0))
+				if (allDO_OK && (doCount > 0))
 				{
-					int result = 0x01700000;// S7Consts.errCliInvalidBlockType
-					result = reader.Read();
-					ShowResult(component, result);
-					if (result == 0)
+					int err = S7Consts.errCliInvalidBlockType;
+					err = reader.Read();
+					LogError(smartComponent, err);
+					if (err == 0)
 					{
-						for (int i = 0; i < diCount; ++i)
+						for (int i = 0; i < doCount; ++i)
 						{
-							ShowResult(component, reader.Results[i]);
-							string giName = "DI_" + i.ToString();
-							if (component.IOSignals.Contains(giName))
+							LogError(smartComponent, reader.Results[i]);
+							string diName = "DO_" + i.ToString();
+							if (smartComponent.IOSignals.Contains(diName))
 							{
-								byte[] b = list[i];
-								component.IOSignals[giName].Value = ((int)b[0] != 0 ? 1 : 0);
+								byte[] buffer = listBuffers[i];
+								smartComponent.IOSignals[diName].Value = ((int)buffer[0] != 0 ? 1 : 0);
 							}
 						}
 					}
@@ -363,111 +380,78 @@ namespace RSConnectDIOToSnap7
 		}
 
 		/// <summary>
-		/// Update DI list depends DI_Number
+		/// Update DIO list depends DIO_Number
 		/// </summary>
 		/// <param name="component">Component that owns signals. </param>
-		/// <param name="oldCount">Old DI count</param>
-		private void UpdateDICount(SmartComponent component, int oldCount)
+		/// <param name="oldCount">Old DIO count</param>
+		private void UpdateIOCount(SmartComponent component, int oldCount, IO io)
 		{
-			int newDICount = (int)component.Properties["DI_Number"].Value;
-			if (newDICount > oldCount)
+            String prefix = "";
+            IOSignalType iOSignalType = IOSignalType.DigitalInput;
+            if(io == IO.Input)
+            {
+                prefix = "DI";
+            }
+            else
+            {
+                prefix = "DO";
+                iOSignalType = IOSignalType.DigitalOutput;
+            }
+
+			int newIOCount = (int)component.Properties[prefix+"_Number"].Value;
+			if (newIOCount > oldCount)
 			{
-				Array.Resize(ref bDI_AddressIsValid, newDICount);
-				for (int i = oldCount; i < newDICount; i++)
+				Array.Resize(ref bDIO_AddressIsValid[(int)io], newIOCount);
+				for (int i = oldCount; i < newIOCount; i++)
 				{
-					string diName = "DI_" + i.ToString();
-					if (!component.IOSignals.Contains(diName))
+					string dioName = prefix+"_" + i.ToString();
+					if (!component.IOSignals.Contains(dioName))
 					{
-						IOSignal ios = new IOSignal(diName, IOSignalType.DigitalOutput);
-						ios.ReadOnly = true;
-						ios.UIVisible = false;
-						component.IOSignals.Add(ios);
+                        IOSignal ios = new IOSignal(dioName, iOSignalType)
+                        {
+                            ReadOnly = true,
+                            UIVisible = false
+                        };
+                        component.IOSignals.Add(ios);
 					}
-					string diAddress = "DI_Address_" + i.ToString();
-					if (!component.Properties.Contains(diAddress))
+					string dioAddress = prefix + "_Address_" + i.ToString();
+					if (!component.Properties.Contains(dioAddress))
 					{
-						DynamicProperty idp = new DynamicProperty(diAddress, "System.String");
-						idp.Value = "M0.0";
-						idp.ReadOnly = false;
-						idp.UIVisible = true;
-						idp.Attributes["AutoApply"] = "true";
+                        DynamicProperty idp = new DynamicProperty(dioAddress, "System.String")
+                        {
+                            Value = "M0.0",
+                            ReadOnly = false,
+                            UIVisible = true
+                        };
+                        idp.Attributes["AutoApply"] = "true";
 						idp.Attributes["CustomValidation"] = "true";
 						component.Properties.Add(idp);
-						bDI_AddressIsValid[i] = false;
+                        bDIO_AddressIsValid[(int)io][i] = false;
 					}
 				}
 			}
 			else
 			{
-				for (int i = oldCount - 1; i >= newDICount; i--)
+				for (int i = oldCount - 1; i >= newIOCount; i--)
 				{
-					string diName = "DI_" + i.ToString();
-					if (component.IOSignals.Contains(diName))
-						component.IOSignals.Remove(diName);
-					string diAddress = "DI_Address_" + i.ToString();
-					if (component.Properties.Contains(diAddress))
-						component.Properties.Remove(diAddress);
+					string dioName = prefix + "_" + i.ToString();
+					if (component.IOSignals.Contains(dioName))
+						component.IOSignals.Remove(dioName);
+					string dioAddress = prefix + "_Address_" + i.ToString();
+					if (component.Properties.Contains(dioAddress))
+						component.Properties.Remove(dioAddress);
 				}
-				Array.Resize(ref bDI_AddressIsValid, newDICount);
+				Array.Resize(ref bDIO_AddressIsValid[(int)io], newIOCount);
 			}
 		}
 
-		/// <summary>
-		/// Update DO list depends DO_Number
-		/// </summary>
-		/// <param name="component">Component that owns signals. </param>
-		/// <param name="oldCount">Old DO count</param>
-		private void UpdateDOCount(SmartComponent component, int oldCount)
-		{
-			int newDOCount = (int)component.Properties["DO_Number"].Value;
-			if (newDOCount > oldCount)
-			{
-				Array.Resize(ref bDO_AddressIsValid, newDOCount);
-				for (int i = oldCount; i < newDOCount; i++)
-				{
-					string doName = "DO_" + i.ToString();
-					if (!component.IOSignals.Contains(doName))
-					{
-						IOSignal ios = new IOSignal(doName, IOSignalType.DigitalInput);
-						ios.ReadOnly = true;
-						ios.UIVisible = false;
-						component.IOSignals.Add(ios);
-					}
-					string doAddress = "DO_Address_" + i.ToString();
-					if (!component.Properties.Contains(doAddress))
-					{
-						DynamicProperty idp = new DynamicProperty(doAddress, "System.String");
-						idp.Value = "M0.0";
-						idp.ReadOnly = false;
-						idp.UIVisible = true;
-						idp.Attributes["AutoApply"] = "true";
-						idp.Attributes["CustomValidation"] = "true";
-						component.Properties.Add(idp);
-						bDO_AddressIsValid[i] = false;
-					}
-				}
-			}
-			else
-			{
-				for (int i = oldCount - 1; i >= newDOCount; i--)
-				{
-					string doName = "DO_" + i.ToString();
-					if (component.IOSignals.Contains(doName))
-						component.IOSignals.Remove(doName);
-					string doAddress = "DO_Address_" + i.ToString();
-					if (component.Properties.Contains(doAddress))
-						component.Properties.Remove(doAddress);
-				}
-				Array.Resize(ref bDO_AddressIsValid, newDOCount);
-			}
-		}
 
 		/// <summary>
-		/// This function returns a textual explaination of the error code
+		/// This function logs a textual explanation of the error code
 		/// </summary>
 		/// <param name="component"></param>
 		/// <param name="result"></param>
-		private void ShowResult(SmartComponent component, int result)
+		private void LogError(SmartComponent component, int result)
 		{
 			if (result != 0)
 			{
