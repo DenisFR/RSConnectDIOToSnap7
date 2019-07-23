@@ -335,10 +335,8 @@ namespace Sharp7
 
         private void CreateSocket()
         {
-            TCPSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp)
-            {
-                NoDelay = true
-            };
+            TCPSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+            TCPSocket.NoDelay = true;
         }
 
         private void TCPPing(string Host, int Port)
@@ -1794,12 +1792,10 @@ namespace Sharp7
         {
             try
             {
-                Socket = new MsgSocket
-                {
-                    ConnectTimeout = _ConnTimeout,
-                    ReadTimeout = _RecvTimeout,
-                    WriteTimeout = _SendTimeout
-                };
+                Socket = new MsgSocket(); 
+                Socket.ConnectTimeout = _ConnTimeout;
+                Socket.ReadTimeout = _RecvTimeout;
+                Socket.WriteTimeout = _SendTimeout;
             }
             catch
             {
