@@ -41,12 +41,12 @@
   <ItemGroup>
     <Reference Include="ABB.Robotics.RobotStudio">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>C:\Program Files (x86)\ABB Industrial IT\Robotics IT\SDK\RobotStudio SDK 6.07\ABB.Robotics.RobotStudio.dll</HintPath>
+      <HintPath>C:\Program Files (x86)\ABB Industrial IT\Robotics IT\SDK\RobotStudio SDK 6.08\ABB.Robotics.RobotStudio.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="ABB.Robotics.RobotStudio.Stations">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>C:\Program Files (x86)\ABB Industrial IT\Robotics IT\SDK\RobotStudio SDK 6.07\ABB.Robotics.RobotStudio.Stations.dll</HintPath>
+      <HintPath>C:\Program Files (x86)\ABB Industrial IT\Robotics IT\SDK\RobotStudio SDK 6.08\ABB.Robotics.RobotStudio.Stations.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="System" />
@@ -77,6 +77,7 @@
   -->
   <PropertyGroup>
     <PostBuildEvent>copy /y "$(TargetPath)" "$(ProjectDir)"
-"C:\Program Files (x86)\ABB Industrial IT\Robotics IT\RobotStudio 6.07\bin\LibraryCompiler.exe" "$(ProjectDir)\RSConnectDIOToSnap7.xml"</PostBuildEvent>
+
+"C:\Program Files (x86)\ABB Industrial IT\Robotics IT\RobotStudio 6.08\bin\LibraryCompiler.exe" "$(ProjectDir)\RSConnectDIOToSnap7.xml"</PostBuildEvent>
   </PropertyGroup>
 </Project>
